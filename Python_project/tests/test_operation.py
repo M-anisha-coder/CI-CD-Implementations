@@ -1,4 +1,4 @@
-from src.math_operation import sum, subtract, multiply, divide
+from Python_project.src.math_operation import sum, subtract, multiply, divide
 
 def test_sum():
     assert sum(2, 3) == 5
