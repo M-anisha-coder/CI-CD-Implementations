@@ -30,6 +30,10 @@ jobs:
             python -m pip install --upgrade pip
             pip install -r requirements.txt
             
-        # Step 4: Run tests
+        # Step 4: Add root directory to PYTHONPATH
+        - name: Set PYTHONPATH
+          run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+
+        # Step 5: Run tests
         - name: Run tests
           run: pytest
