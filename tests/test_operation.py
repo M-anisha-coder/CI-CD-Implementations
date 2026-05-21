@@ -1,8 +1,8 @@
-from src.math_operation import add, subtract, multiply, divide
+from src.math_operation import sum, subtract, multiply, divide
 
-def test_add():
-    assert add(2, 3) == 5
-    assert add(-1, 1) == 0
+def test_sum():
+    assert sum(2, 3) == 5
+    assert sum(-1, 1) == 0
 
 def test_subtract():
     assert subtract(5, 3) == 2
