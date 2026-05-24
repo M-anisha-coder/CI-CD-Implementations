@@ -2,14 +2,24 @@ name: CI/CD for Flask Travel application
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+    paths:
+      - 'Flask_app_project/**'
+
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+    paths:
+      - 'Flask_app_project/**'
 
 jobs:
     # for build and test the application
   build-and-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Flask_app_project
 
     steps:
     - name: Checkout code
@@ -33,6 +43,11 @@ jobs:
   build-and-publish:
     needs: build-and-test
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: Flask_app_project
+        
     steps:
     - name: Checkout code   
       uses: actions/checkout@v3
@@ -49,7 +64,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v3
       with:
-        context: .
+        context: ./Flask_app_project
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/flask-travel-app:latest
 
