@@ -3,6 +3,7 @@ from Python_project.src.math_operation import sum, subtract, multiply, divide
 def test_sum():
     assert sum(2, 3) == 5
     assert sum(-1, 1) == 0
+    assert sum(0, 0) == 0
 
 def test_subtract():
     assert subtract(5, 3) == 2
