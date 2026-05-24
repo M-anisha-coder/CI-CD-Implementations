@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voyageur — Discover the World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sand: #f5ede0;
+    --sand-deep: #e8d9c4;
+    --ink: #1a1410;
+    --rust: #c4522a;
+    --rust-light: #e8926a;
+    --sage: #4a6741;
+    --sage-light: #8aad85;
+    --ocean: #1d4e6b;
+    --ocean-light: #5b9ab8;
+    --gold: #c9962a;
+    --cream: #faf6f0;
+    --text-muted: #6b5e52;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ink);
+    color: var(--cream);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--rust);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease, opacity 0.2s;
+    transform: translate(-50%, -50%);
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1px solid rgba(196,82,42,0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s, border-color 0.3s;
+  }
+  body:hover .cursor { opacity: 1; }
+  a:hover ~ .cursor, .card:hover ~ .cursor { transform: translate(-50%,-50%) scale(2.5); }
+
+  /* ——— NAV ——— */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.5rem 3rem;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(26,20,16,0.9), transparent);
+    animation: fadeDown 1s ease forwards;
+  }
+  @keyframes fadeDown { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem; font-weight: 300; letter-spacing: 0.12em;
+    color: var(--cream); text-decoration: none;
+  }
+  .logo span { color: var(--rust); }
+
+  nav ul { list-style: none; display: flex; gap: 2.5rem; }
+  nav a {
+    color: rgba(250,246,240,0.75); text-decoration: none;
+    font-size: 0.82rem; letter-spacing: 0.12em; text-transform: uppercase;
+    font-weight: 500; transition: color 0.3s;
+    position: relative;
+  }
+  nav a::after {
+    content: ''; position: absolute; bottom: -4px; left: 0;
+    width: 0; height: 1px; background: var(--rust);
+    transition: width 0.3s ease;
+  }
+  nav a:hover { color: var(--cream); }
+  nav a:hover::after { width: 100%; }
+
+  .nav-cta {
+    padding: 0.55rem 1.4rem;
+    border: 1px solid rgba(196,82,42,0.6);
+    border-radius: 2px;
+    color: var(--rust-light) !important;
+    transition: background 0.3s, color 0.3s !important;
+  }
+  .nav-cta:hover { background: var(--rust); color: var(--cream) !important; }
+  .nav-cta::after { display: none !important; }
+
+  /* ——— HERO ——— */
+  .hero {
+    height: 100vh; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1800&q=80') center/cover;
+    transform: scale(1.08);
+    animation: heroZoom 18s ease-out forwards;
+    filter: brightness(0.45);
+  }
+  @keyframes heroZoom { to { transform: scale(1); } }
+
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(26,20,16,0.7) 100%);
+  }
+
+  .hero-content {
+    position: relative; text-align: center;
+    animation: heroReveal 1.4s 0.4s ease both;
+  }
+  @keyframes heroReveal { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+
+  .hero-eyebrow {
+    font-size: 0.72rem; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--rust-light); margin-bottom: 1.2rem;
+    animation: heroReveal 1.4s 0.6s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(4rem, 9vw, 8rem);
+    font-weight: 300; line-height: 0.92;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.8rem;
+    animation: heroReveal 1.4s 0.8s ease both;
+  }
+  .hero-title em { font-style: italic; color: var(--rust-light); }
+
+  .hero-sub {
+    font-size: 1rem; color: rgba(250,246,240,0.65); max-width: 420px; margin: 0 auto 2.5rem;
+    line-height: 1.7; font-weight: 300;
+    animation: heroReveal 1.4s 1s ease both;
+  }
+
+  .hero-btns {
+    display: flex; gap: 1rem; justify-content: center;
+    animation: heroReveal 1.4s 1.2s ease both;
+  }
+
+  .btn-primary {
+    padding: 0.9rem 2.2rem;
+    background: var(--rust); color: var(--cream);
+    text-decoration: none; font-size: 0.82rem; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 500;
+    transition: background 0.3s, transform 0.2s;
+    border-radius: 2px;
+  }
+  .btn-primary:hover { background: #b84424; transform: translateY(-2px); }
+
+  .btn-ghost {
+    padding: 0.9rem 2.2rem;
+    border: 1px solid rgba(250,246,240,0.35); color: var(--cream);
+    text-decoration: none; font-size: 0.82rem; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 500;
+    transition: border-color 0.3s, background 0.3s, transform 0.2s;
+    border-radius: 2px;
+  }
+  .btn-ghost:hover { border-color: var(--cream); background: rgba(250,246,240,0.08); transform: translateY(-2px); }
+
+  .hero-scroll {
+    position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    color: rgba(250,246,240,0.45); font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase;
+    animation: heroReveal 1.4s 1.4s ease both;
+  }
+  .scroll-line {
+    width: 1px; height: 50px;
+    background: linear-gradient(to bottom, rgba(250,246,240,0.45), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse { 0%,100%{opacity:0.45} 50%{opacity:1} }
+
+  /* ——— STATS BAR ——— */
+  .stats-bar {
+    background: var(--sand-deep); color: var(--ink);
+    display: flex; justify-content: center; gap: 0;
+  }
+  .stat-item {
+    padding: 2rem 4rem;
+    border-right: 1px solid rgba(26,20,16,0.12);
+    text-align: center;
+    animation: statReveal 0.6s ease both;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.6rem; font-weight: 400; line-height: 1;
+    color: var(--rust); display: block;
+  }
+  .stat-label { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.3rem; }
+
+  /* ——— SECTION SHELL ——— */
+  section { padding: 7rem 3rem; }
+  .section-eyebrow {
+    font-size: 0.7rem; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--rust); margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 300; line-height: 1.1;
+    margin-bottom: 1.2rem;
+  }
+  .section-sub { color: rgba(250,246,240,0.55); max-width: 480px; line-height: 1.75; font-weight: 300; }
+
+  /* ——— DESTINATIONS ——— */
+  .destinations { background: var(--ink); }
+  .dest-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 3.5rem; }
+  .dest-link { color: var(--rust-light); text-decoration: none; font-size: 0.82rem; letter-spacing: 0.1em; border-bottom: 1px solid var(--rust-light); padding-bottom: 2px; }
+
+  .dest-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: 320px 280px;
+    gap: 14px;
+  }
+
+  .dest-card {
+    position: relative; overflow: hidden;
+    border-radius: 4px; cursor: none;
+    transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  .dest-card:hover { transform: scale(0.985); }
+
+  .dest-card:nth-child(1) { grid-column: 1; grid-row: 1 / 3; }
+  .dest-card:nth-child(4) { grid-column: 2 / 4; }
+
+  .dest-img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.5s;
+    filter: brightness(0.7) saturate(0.9);
+  }
+  .dest-card:hover .dest-img { transform: scale(1.06); filter: brightness(0.55) saturate(1.1); }
+
+  .dest-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(26,20,16,0.9) 0%, transparent 55%);
+    transition: opacity 0.4s;
+  }
+
+  .dest-info {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 1.5rem 1.6rem;
+    transform: translateY(0);
+    transition: transform 0.4s ease;
+  }
+
+  .dest-country {
+    font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--rust-light); margin-bottom: 0.35rem;
+  }
+  .dest-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.7rem; font-weight: 400; line-height: 1.1;
+  }
+  .dest-card:nth-child(1) .dest-name { font-size: 2.4rem; }
+
+  .dest-meta {
+    display: flex; align-items: center; gap: 1rem;
+    margin-top: 0.8rem;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.4s 0.05s, transform 0.4s 0.05s;
+  }
+  .dest-card:hover .dest-meta { opacity: 1; transform: translateY(0); }
+
+  .dest-tag {
+    font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.3rem 0.7rem; border: 1px solid rgba(250,246,240,0.3);
+    border-radius: 1px; color: rgba(250,246,240,0.75);
+  }
+  .dest-price { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; margin-left: auto; color: var(--gold); }
+
+  /* ——— EXPERIENCES ——— */
+  .experiences { background: var(--cream); color: var(--ink); }
+  .experiences .section-sub { color: var(--text-muted); }
+  .experiences .section-eyebrow { color: var(--rust); }
+
+  .exp-scroll {
+    display: flex; gap: 20px; overflow-x: auto; padding-bottom: 1rem;
+    margin-top: 3rem; scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .exp-scroll::-webkit-scrollbar { display: none; }
+
+  .exp-card {
+    flex: 0 0 300px; scroll-snap-align: start;
+    border-radius: 6px; overflow: hidden;
+    position: relative; cursor: none;
+    transition: transform 0.4s ease, box-shadow 0.4s;
+  }
+  .exp-card:hover { transform: translateY(-8px); box-shadow: 0 24px 48px rgba(26,20,16,0.18); }
+
+  .exp-img { width: 100%; height: 220px; object-fit: cover; display: block;
+    transition: transform 0.6s ease; }
+  .exp-card:hover .exp-img { transform: scale(1.05); }
+
+  .exp-body { padding: 1.3rem 1.4rem; background: #fff; }
+  .exp-cat { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--rust); margin-bottom: 0.5rem; }
+  .exp-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; margin-bottom: 0.5rem; color: var(--ink); }
+  .exp-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 1rem; }
+  .exp-footer { display: flex; align-items: center; justify-content: space-between; }
+  .exp-dur { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+  .exp-price-tag { font-size: 0.9rem; font-weight: 500; color: var(--sage); }
+
+  /* ——— FEATURED JOURNEY ——— */
+  .featured { background: var(--ocean); overflow: hidden; }
+  .feat-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+
+  .feat-images { position: relative; height: 560px; }
+  .feat-img-main {
+    position: absolute; width: 72%; height: 80%;
+    object-fit: cover; border-radius: 4px;
+    top: 0; left: 0;
+    transition: transform 0.6s ease;
+    box-shadow: 24px 24px 0 rgba(0,0,0,0.2);
+  }
+  .feat-img-accent {
+    position: absolute; width: 52%; height: 55%;
+    object-fit: cover; border-radius: 4px;
+    bottom: 0; right: 0;
+    border: 4px solid var(--ocean);
+    transition: transform 0.6s ease 0.05s;
+    box-shadow: -12px -12px 0 rgba(0,0,0,0.15);
+  }
+  .featured:hover .feat-img-main { transform: translate(4px, -4px); }
+  .featured:hover .feat-img-accent { transform: translate(-4px, 4px); }
+
+  .feat-badge {
+    position: absolute; top: 50%; left: 52%;
+    transform: translate(-50%, -50%);
+    background: var(--gold); color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.9rem; padding: 0.8rem 1.2rem;
+    text-align: center; border-radius: 2px;
+    line-height: 1.3; font-style: italic;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 2;
+  }
+
+  .feat-content .section-eyebrow { color: var(--ocean-light); }
+  .feat-content .section-sub { color: rgba(250,246,240,0.65); max-width: 100%; }
+
+  .feat-highlights { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0; }
+  .feat-highlight {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1rem 1.2rem;
+    background: rgba(250,246,240,0.06);
+    border-left: 2px solid var(--ocean-light);
+    border-radius: 2px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .feat-highlight:hover { background: rgba(250,246,240,0.1); border-color: var(--gold); }
+  .feat-highlight-icon { font-size: 1.2rem; margin-top: 2px; }
+  .feat-highlight-title { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.2rem; }
+  .feat-highlight-desc { font-size: 0.78rem; color: rgba(250,246,240,0.55); line-height: 1.5; }
+
+  /* ——— GALLERY ——— */
+  .gallery { background: #111; padding: 6rem 0; }
+  .gallery-header { padding: 0 3rem; margin-bottom: 2.5rem; }
+  .gallery-strip {
+    display: flex; gap: 8px; overflow: hidden;
+    animation: galleryScroll 30s linear infinite;
+    white-space: nowrap;
+  }
+  @keyframes galleryScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .gallery-strip:hover { animation-play-state: paused; }
+
+  .gallery-item {
+    flex: 0 0 280px; height: 200px;
+    border-radius: 4px; overflow: hidden; position: relative; cursor: none;
+  }
+  .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; filter: brightness(0.85); }
+  .gallery-item:hover img { transform: scale(1.08); filter: brightness(1); }
+  .gallery-item-label {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 0.7rem 0.9rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .gallery-item:hover .gallery-item-label { opacity: 1; }
+
+  /* ——— TESTIMONIAL ——— */
+  .testimonials { background: var(--sand); color: var(--ink); }
+  .testimonials .section-eyebrow { color: var(--rust); }
+  .test-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 3rem; }
+
+  .test-card {
+    background: #fff; border-radius: 6px;
+    padding: 2rem; position: relative;
+    transition: transform 0.4s ease, box-shadow 0.4s;
+  }
+  .test-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+  .test-quote { font-family: 'Cormorant Garamond', serif; font-size: 3.5rem; line-height: 1; color: var(--rust-light); margin-bottom: 0.5rem; }
+  .test-text { font-size: 0.9rem; line-height: 1.75; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .test-author { display: flex; align-items: center; gap: 0.8rem; }
+  .test-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+  .test-name { font-size: 0.85rem; font-weight: 500; color: var(--ink); }
+  .test-trip { font-size: 0.72rem; color: var(--text-muted); }
+  .stars { color: var(--gold); font-size: 0.75rem; letter-spacing: 2px; margin-bottom: 0.8rem; }
+
+  /* ——— NEWSLETTER ——— */
+  .newsletter {
+    background: var(--rust); padding: 5rem 3rem;
+    text-align: center;
+  }
+  .newsletter .section-title { color: var(--cream); }
+  .newsletter p { color: rgba(250,246,240,0.75); max-width: 440px; margin: 1rem auto 2.5rem; line-height: 1.7; }
+  .newsletter-form { display: flex; gap: 0; max-width: 480px; margin: 0 auto; }
+  .newsletter-input {
+    flex: 1; padding: 1rem 1.4rem;
+    border: none; background: rgba(250,246,240,0.12);
+    color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    border-radius: 2px 0 0 2px; outline: none;
+    transition: background 0.3s;
+  }
+  .newsletter-input::placeholder { color: rgba(250,246,240,0.5); }
+  .newsletter-input:focus { background: rgba(250,246,240,0.2); }
+  .newsletter-btn {
+    padding: 1rem 1.8rem;
+    background: var(--ink); color: var(--cream);
+    border: none; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 500; border-radius: 0 2px 2px 0;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .newsletter-btn:hover { background: #2d2420; transform: scale(1.02); }
+
+  /* ——— FOOTER ——— */
+  footer {
+    background: #0e0b09; color: rgba(250,246,240,0.45);
+    padding: 4rem 3rem 2rem;
+  }
+  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 3rem; }
+  .footer-brand .logo { display: block; margin-bottom: 1rem; font-size: 1.5rem; }
+  .footer-brand p { font-size: 0.82rem; line-height: 1.7; max-width: 260px; }
+  .footer-col h4 { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cream); margin-bottom: 1.2rem; }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 0.6rem; }
+  .footer-col a { color: rgba(250,246,240,0.45); text-decoration: none; font-size: 0.82rem; transition: color 0.3s; }
+  .footer-col a:hover { color: var(--cream); }
+  .footer-bottom { border-top: 1px solid rgba(250,246,240,0.08); padding-top: 1.5rem; display: flex; justify-content: space-between; font-size: 0.75rem; }
+
+  /* ——— SCROLL REVEAL ——— */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+
+  /* ——— PARALLAX FLOAT ——— */
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  .floating { animation: float 6s ease-in-out infinite; }
+
+  /* ——— LOADING SCREEN ——— */
+  .loader {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 1rem;
+    transition: opacity 0.8s ease, visibility 0.8s;
+  }
+  .loader.done { opacity: 0; visibility: hidden; }
+  .loader-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem; font-weight: 300; letter-spacing: 0.15em;
+    color: var(--cream); animation: pulse 1.5s ease-in-out infinite;
+  }
+  .loader-logo span { color: var(--rust); }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  .loader-line {
+    width: 80px; height: 1px; background: rgba(250,246,240,0.15);
+    position: relative; overflow: hidden;
+  }
+  .loader-line::after {
+    content: ''; position: absolute; inset: 0;
+    background: var(--rust);
+    animation: loaderSlide 1.5s ease-in-out infinite;
+  }
+  @keyframes loaderSlide { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+
+  /* ——— HOVER PARALLAX TILT ——— */
+  .tilt { transform-style: preserve-3d; perspective: 1000px; }
+</style>
+</head>
+<body>
+
+<!-- Loader -->
+<div class="loader" id="loader">
+  <div class="loader-logo">Voya<span>g</span>eur</div>
+  <div class="loader-line"></div>
+</div>
+
+<!-- Custom Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="logo">Voya<span>g</span>eur</a>
+  <ul>
+    <li><a href="#destinations">Destinations</a></li>
+    <li><a href="#experiences">Experiences</a></li>
+    <li><a href="#journeys">Journeys</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#" class="nav-cta">Book Now</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Curated luxury travel since 2009</p>
+    <h1 class="hero-title">Wander<br>with <em>purpose</em></h1>
+    <p class="hero-sub">Immersive journeys to the world's most extraordinary places, crafted for those who travel to truly experience.</p>
+    <div class="hero-btns">
+      <a href="#destinations" class="btn-primary">Explore Destinations</a>
+      <a href="#journeys" class="btn-ghost">View Itineraries</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat-item reveal">
+    <span class="stat-num" data-target="147">0</span>
+    <div class="stat-label">Destinations</div>
+  </div>
+  <div class="stat-item reveal reveal-delay-1">
+    <span class="stat-num" data-target="28000">0</span>
+    <div class="stat-label">Happy Travellers</div>
+  </div>
+  <div class="stat-item reveal reveal-delay-2">
+    <span class="stat-num" data-target="94">0</span>
+    <div class="stat-label">Expert Guides</div>
+  </div>
+  <div class="stat-item reveal reveal-delay-3">
+    <span class="stat-num" data-target="15">0</span>
+    <div class="stat-label">Years of Excellence</div>
+  </div>
+</div>
+
+<!-- Destinations -->
+<section class="destinations" id="destinations">
+  <div class="dest-header">
+    <div>
+      <p class="section-eyebrow reveal">Featured Destinations</p>
+      <h2 class="section-title reveal">Places that<br>leave you <em style="font-style:italic;color:var(--rust-light);">breathless</em></h2>
+    </div>
+    <a href="#" class="dest-link reveal">View All →</a>
+  </div>
+
+  <div class="dest-grid">
+    <div class="dest-card tilt reveal">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800&q=80" alt="Santorini">
+      <div class="dest-overlay"></div>
+      <div class="dest-info">
+        <div class="dest-country">Greece</div>
+        <div class="dest-name">Santorini</div>
+        <div class="dest-meta">
+          <span class="dest-tag">Island</span>
+          <span class="dest-tag">Romantic</span>
+          <span class="dest-price">From €2,400</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dest-card tilt reveal reveal-delay-1">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80" alt="Bali">
+      <div class="dest-overlay"></div>
+      <div class="dest-info">
+        <div class="dest-country">Indonesia</div>
+        <div class="dest-name">Bali</div>
+        <div class="dest-meta">
+          <span class="dest-tag">Tropical</span>
+          <span class="dest-price">From $1,800</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dest-card tilt reveal reveal-delay-2">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=600&q=80" alt="Marrakech">
+      <div class="dest-overlay"></div>
+      <div class="dest-info">
+        <div class="dest-country">Morocco</div>
+        <div class="dest-name">Marrakech</div>
+        <div class="dest-meta">
+          <span class="dest-tag">Culture</span>
+          <span class="dest-price">From £1,200</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dest-card tilt reveal reveal-delay-1">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&q=80" alt="Kyoto">
+      <div class="dest-overlay"></div>
+      <div class="dest-info">
+        <div class="dest-country">Japan</div>
+        <div class="dest-name">Kyoto</div>
+        <div class="dest-meta">
+          <span class="dest-tag">Heritage</span>
+          <span class="dest-tag">Zen</span>
+          <span class="dest-price">From ¥280,000</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dest-card tilt reveal reveal-delay-2">
+      <img class="dest-img" src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&q=80" alt="Swiss Alps">
+      <div class="dest-overlay"></div>
+      <div class="dest-info">
+        <div class="dest-country">Switzerland</div>
+        <div class="dest-name">Alps</div>
+        <div class="dest-meta">
+          <span class="dest-tag">Adventure</span>
+          <span class="dest-price">From CHF 3,200</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Experiences -->
+<section class="experiences" id="experiences">
+  <div>
+    <p class="section-eyebrow reveal">Curated Experiences</p>
+    <h2 class="section-title reveal" style="color:var(--ink)">More than a trip.<br>A transformation.</h2>
+    <p class="section-sub reveal">Each experience is meticulously designed to immerse you in the soul of a place.</p>
+  </div>
+
+  <div class="exp-scroll">
+    <div class="exp-card">
+      <img class="exp-img" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80" alt="Culinary">
+      <div class="exp-body">
+        <div class="exp-cat">Culinary</div>
+        <div class="exp-title">Farm-to-Table in Tuscany</div>
+        <div class="exp-desc">Cook alongside Nonna Rosa in her hilltop farmhouse, harvesting ingredients at dawn and dining under the stars.</div>
+        <div class="exp-footer">
+          <span class="exp-dur">⏱ 7 days</span>
+          <span class="exp-price-tag">€2,890/pp</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-card">
+      <img class="exp-img" src="https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=600&q=80" alt="Safari">
+      <div class="exp-body">
+        <div class="exp-cat">Wildlife</div>
+        <div class="exp-title">Great Migration Safari</div>
+        <div class="exp-desc">Witness one of nature's greatest spectacles from a private camp on the Maasai Mara, guided by master trackers.</div>
+        <div class="exp-footer">
+          <span class="exp-dur">⏱ 10 days</span>
+          <span class="exp-price-tag">$6,500/pp</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-card">
+      <img class="exp-img" src="https://images.unsplash.com/photo-1528543606781-2f6e6857f318?w=600&q=80" alt="Sailing">
+      <div class="exp-body">
+        <div class="exp-cat">Adventure</div>
+        <div class="exp-title">Greek Islands by Sail</div>
+        <div class="exp-desc">Chart your own course through the Cyclades aboard a crewed gulet, anchoring in hidden coves at dusk.</div>
+        <div class="exp-footer">
+          <span class="exp-dur">⏱ 12 days</span>
+          <span class="exp-price-tag">€5,200/pp</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-card">
+      <img class="exp-img" src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=600&q=80" alt="Spa">
+      <div class="exp-body">
+        <div class="exp-cat">Wellness</div>
+        <div class="exp-title">Onsen Retreat, Hakone</div>
+        <div class="exp-desc">Soak in private mineral baths overlooking Mt Fuji, practicing morning tea ceremony with a Zen master.</div>
+        <div class="exp-footer">
+          <span class="exp-dur">⏱ 5 days</span>
+          <span class="exp-price-tag">¥190,000/pp</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-card">
+      <img class="exp-img" src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=80" alt="Road">
+      <div class="exp-body">
+        <div class="exp-cat">Road Trip</div>
+        <div class="exp-title">Route 66 in a Classic</div>
+        <div class="exp-desc">Cruise America's Mother Road in a '67 Mustang, from Chicago diners to Santa Monica's Pacific shore.</div>
+        <div class="exp-footer">
+          <span class="exp-dur">⏱ 14 days</span>
+          <span class="exp-price-tag">$3,400/pp</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Duplicate for infinite feel -->
+    <div class="exp-card">
+      <img class="exp-img" src="https://images.unsplash.com/photo-1473116763249-2faaef81ccda?w=600&q=80" alt="Arctic">
+      <div class="exp-body">
+        <div class="exp-cat">Expedition</div>
+        <div class="exp-title">Northern Lights Quest</div>
+        <div class="exp-desc">Hunt the aurora borealis from glass-roof igloos in Finnish Lapland, with reindeer sledding by day.</div>
+        <div class="exp-footer">
+          <span class="exp-dur">⏱ 6 days</span>
+          <span class="exp-price-tag">€3,700/pp</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Journey -->
+<section class="featured" id="journeys">
+  <div class="feat-inner">
+    <div class="feat-images floating">
+      <img class="feat-img-main" src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=700&q=80" alt="Istanbul">
+      <img class="feat-img-accent" src="https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=500&q=80" alt="Spices">
+      <div class="feat-badge">Journey<br>of the Month</div>
+    </div>
+
+    <div class="feat-content">
+      <p class="section-eyebrow reveal">Signature Journey</p>
+      <h2 class="section-title reveal">Istanbul to<br>Cappadocia<br><em style="font-style:italic">Overland</em></h2>
+      <p class="section-sub reveal" style="margin-bottom:0">14 days crossing the soul of Turkey — ancient bazaars, Sufi devotion, volcanic landscapes, and cave dwellings carved by time itself.</p>
+
+      <div class="feat-highlights reveal">
+        <div class="feat-highlight">
+          <span class="feat-highlight-icon">🏛️</span>
+          <div>
+            <div class="feat-highlight-title">Private Hagia Sophia Evening</div>
+            <div class="feat-highlight-desc">An after-hours guided visit to the most storied cathedral-mosque in history.</div>
+          </div>
+        </div>
+        <div class="feat-highlight">
+          <span class="feat-highlight-icon">🎈</span>
+          <div>
+            <div class="feat-highlight-title">Sunrise Hot Air Balloon</div>
+            <div class="feat-highlight-desc">Float above Cappadocia's fairy chimneys as the valleys fill with amber light.</div>
+          </div>
+        </div>
+        <div class="feat-highlight">
+          <span class="feat-highlight-icon">🍽️</span>
+          <div>
+            <div class="feat-highlight-title">Chef's Table in a Cave Restaurant</div>
+            <div class="feat-highlight-desc">A 7-course Anatolian feast with a James Beard-nominated chef, underground.</div>
+          </div>
+        </div>
+      </div>
+
+      <a href="#" class="btn-primary" style="display:inline-block;margin-top:1rem">View Full Itinerary →</a>
+    </div>
+  </div>
+</section>
+
+<!-- Gallery Strip -->
+<section class="gallery">
+  <div class="gallery-header">
+    <p class="section-eyebrow">From Our Travellers</p>
+    <h2 class="section-title" style="font-size:2.2rem">Moments captured</h2>
+  </div>
+  <div class="gallery-strip" id="galleryStrip">
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=400&q=75" alt="Beach"><div class="gallery-item-label">Maldives</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=400&q=75" alt="Canyon"><div class="gallery-item-label">Antelope Canyon</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1502791451862-7bd8c1df43a7?w=400&q=75" alt="Temple"><div class="gallery-item-label">Bagan, Myanmar</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=75" alt="Portrait"><div class="gallery-item-label">Rajasthan</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=75" alt="Mountains"><div class="gallery-item-label">Patagonia</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=75" alt="Pool"><div class="gallery-item-label">Amalfi Coast</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1539650116574-75c0c6d92e1a?w=400&q=75" alt="Desert"><div class="gallery-item-label">Sahara</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400&q=75" alt="City"><div class="gallery-item-label">Hong Kong</div></div>
+    <!-- Duplicate for loop -->
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=400&q=75" alt="Beach"><div class="gallery-item-label">Maldives</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=400&q=75" alt="Canyon"><div class="gallery-item-label">Antelope Canyon</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1502791451862-7bd8c1df43a7?w=400&q=75" alt="Temple"><div class="gallery-item-label">Bagan, Myanmar</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=75" alt="Portrait"><div class="gallery-item-label">Rajasthan</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=75" alt="Mountains"><div class="gallery-item-label">Patagonia</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=75" alt="Pool"><div class="gallery-item-label">Amalfi Coast</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1539650116574-75c0c6d92e1a?w=400&q=75" alt="Desert"><div class="gallery-item-label">Sahara</div></div>
+    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400&q=75" alt="City"><div class="gallery-item-label">Hong Kong</div></div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials" id="about">
+  <p class="section-eyebrow reveal">Testimonials</p>
+  <h2 class="section-title reveal" style="color:var(--ink)">Voices from<br>the road</h2>
+  <div class="test-grid">
+    <div class="test-card reveal">
+      <div class="stars">★★★★★</div>
+      <div class="test-quote">"</div>
+      <p class="test-text">Voyageur didn't just plan our honeymoon — they crafted a love letter to the world. Every detail, every surprise, was beyond imagination.</p>
+      <div class="test-author">
+        <img class="test-avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80" alt="Sarah">
+        <div>
+          <div class="test-name">Sarah & James M.</div>
+          <div class="test-trip">Maldives Honeymoon, 2024</div>
+        </div>
+      </div>
+    </div>
+    <div class="test-card reveal reveal-delay-1">
+      <div class="stars">★★★★★</div>
+      <div class="test-quote">"</div>
+      <p class="test-text">The Turkey overland trip changed how I understand history, food, and myself. Our guide was the most knowledgeable person I've ever met on the road.</p>
+      <div class="test-author">
+        <img class="test-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80" alt="Marcus">
+        <div>
+          <div class="test-name">Marcus L.</div>
+          <div class="test-trip">Istanbul to Cappadocia, 2025</div>
+        </div>
+      </div>
+    </div>
+    <div class="test-card reveal reveal-delay-2">
+      <div class="stars">★★★★★</div>
+      <div class="test-quote">"</div>
+      <p class="test-text">Three weeks in Japan and I never once had to stress about logistics. Pure immersion. The sake brewery private tour alone was worth the entire price.</p>
+      <div class="test-author">
+        <img class="test-avatar" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=80" alt="Priya">
+        <div>
+          <div class="test-name">Priya N.</div>
+          <div class="test-trip">Japan Discovery, 2025</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Newsletter -->
+<section class="newsletter">
+  <h2 class="section-title">Start your<br>next chapter</h2>
+  <p>Join 40,000 wanderers receiving destination guides, insider access, and early journey releases every fortnight.</p>
+  <div class="newsletter-form">
+    <input class="newsletter-input" type="email" placeholder="Your email address">
+    <button class="newsletter-btn">Subscribe</button>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="#" class="logo">Voya<span>g</span>eur</a>
+      <p>Crafting extraordinary journeys for curious minds since 2009. ABTA bonded & ATOL protected.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Destinations</h4>
+      <ul>
+        <li><a href="#">Europe</a></li>
+        <li><a href="#">Asia Pacific</a></li>
+        <li><a href="#">Middle East</a></li>
+        <li><a href="#">Americas</a></li>
+        <li><a href="#">Africa</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Experiences</h4>
+      <ul>
+        <li><a href="#">Culinary</a></li>
+        <li><a href="#">Wildlife</a></li>
+        <li><a href="#">Wellness</a></li>
+        <li><a href="#">Adventure</a></li>
+        <li><a href="#">Cultural</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">Our Story</a></li>
+        <li><a href="#">Travel Guides</a></li>
+        <li><a href="#">Press</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 Voyageur. All rights reserved.</span>
+    <span>Privacy · Terms · Cookie Policy</span>
+  </div>
+</footer>
+
+<script>
+  // Loader
+  window.addEventListener('load', () => {
+    setTimeout(() => document.getElementById('loader').classList.add('done'), 1200);
+  });
+
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animCursor() {
+    cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animCursor);
+  }
+  animCursor();
+
+  // Hover effects for cursor
+  document.querySelectorAll('a, button, .dest-card, .exp-card, .test-card').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'translate(-50%,-50%) scale(2.5)';
+      ring.style.width = '60px'; ring.style.height = '60px';
+      ring.style.borderColor = 'rgba(196,82,42,0.7)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+      ring.style.width = '36px'; ring.style.height = '36px';
+      ring.style.borderColor = 'rgba(196,82,42,0.5)';
+    });
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(r => observer.observe(r));
+
+  // Counter animation
+  function animateCounter(el) {
+    const target = parseInt(el.dataset.target);
+    const duration = 1800;
+    const start = performance.now();
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(ease * target);
+      el.textContent = target >= 1000 ? current.toLocaleString()+'+' : current+(target<100?'%':'+');
+      if (progress < 1) requestAnimationFrame(update);
+      else el.textContent = target >= 1000 ? target.toLocaleString()+'+' : target+(target<100?'%':'+');
+    }
+    requestAnimationFrame(update);
+  }
+  const statNums = document.querySelectorAll('.stat-num[data-target]');
+  const statObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { animateCounter(e.target); statObserver.unobserve(e.target); }
+    });
+  }, { threshold: 0.5 });
+  statNums.forEach(n => statObserver.observe(n));
+
+  // 3D card tilt
+  document.querySelectorAll('.tilt').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 6}deg) scale(0.98)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) scale(1)';
+    });
+  });
+
+  // Parallax on hero bg
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    const heroBg = document.querySelector('.hero-bg');
+    if (heroBg) heroBg.style.transform = `scale(1.0) translateY(${y * 0.25}px)`;
+  });
+
+  // Gallery auto-scroll pause on hover
+  const strip = document.getElementById('galleryStrip');
+  strip.addEventListener('mouseenter', () => strip.style.animationPlayState = 'paused');
+  strip.addEventListener('mouseleave', () => strip.style.animationPlayState = 'running');
+</script>
+</body>
+</html>
