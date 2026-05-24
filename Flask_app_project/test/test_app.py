@@ -1,4 +1,4 @@
-from app import app
+from  Flask_app_project.src.app import app
 
 
 def test_home():
